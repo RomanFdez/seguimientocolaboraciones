@@ -2,6 +2,7 @@
   "name": "seguimiento-colaboraciones",
   "private": true,
   "version": "1.2.0",
+  "license": "UNLICENSED",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -9,4 +9,5 @@ Aplicación web interna para la gestión y seguimiento de proyectos y colaboraci
 - Control de acceso por roles.
 
 ---
-© 2026 Reservados todos los derechos.
+## 📄 Licencia
+**Propiedad de Álvaro Román.** Todos los derechos reservados. Queda prohibido cualquier uso, copia o distribución sin autorización previa y comercial.
