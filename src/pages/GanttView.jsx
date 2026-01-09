@@ -1,5 +1,5 @@
 import { useMemo, useState, useRef, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useOutletContext } from 'react-router-dom';
 import {
     Container,
     Paper,
@@ -337,6 +337,7 @@ const GanttView = () => {
     const [typeFilter, setTypeFilter] = useState('all');
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const months = getMonthsOfYear(selectedYear);
+    const { presentationMode } = useOutletContext() || { presentationMode: false };
 
     const filteredCollaborations = useMemo(() => {
         const currentYear = new Date().getFullYear();
@@ -374,50 +375,52 @@ const GanttView = () => {
                 </Typography>
             </Box>
 
-            <Paper sx={{ p: 2, mb: 2 }}>
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                    <TextField
-                        select
-                        label="Año"
-                        value={selectedYear}
-                        onChange={(e) => setSelectedYear(Number(e.target.value))}
-                        sx={{ minWidth: 100 }}
-                    >
-                        {Array.from({ length: new Date().getFullYear() - 2024 + 1 }, (_, i) => 2024 + i).map(year => (
-                            <MenuItem key={year} value={year}>{year}</MenuItem>
-                        ))}
-                    </TextField>
+            {!presentationMode && (
+                <Paper sx={{ p: 2, mb: 2 }}>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        <TextField
+                            select
+                            label="Año"
+                            value={selectedYear}
+                            onChange={(e) => setSelectedYear(Number(e.target.value))}
+                            sx={{ minWidth: 100 }}
+                        >
+                            {Array.from({ length: new Date().getFullYear() - 2024 + 1 }, (_, i) => 2024 + i).map(year => (
+                                <MenuItem key={year} value={year}>{year}</MenuItem>
+                            ))}
+                        </TextField>
 
-                    <TextField
-                        select
-                        label="Filtrar por Tipo"
-                        value={typeFilter}
-                        onChange={(e) => setTypeFilter(e.target.value)}
-                        sx={{ minWidth: 200 }}
-                    >
-                        <MenuItem value="all">Todos</MenuItem>
-                        {COLLABORATION_TYPES.map(type => (
-                            <MenuItem key={type.value} value={type.value}>
-                                {type.label}
-                            </MenuItem>
-                        ))}
-                    </TextField>
-                    <TextField
-                        select
-                        label="Filtrar por Estado"
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        sx={{ minWidth: 200 }}
-                    >
-                        <MenuItem value="all">Todos</MenuItem>
-                        {STATUSES.map(status => (
-                            <MenuItem key={status.value} value={status.value}>
-                                {status.label}
-                            </MenuItem>
-                        ))}
-                    </TextField>
-                </Box>
-            </Paper>
+                        <TextField
+                            select
+                            label="Filtrar por Tipo"
+                            value={typeFilter}
+                            onChange={(e) => setTypeFilter(e.target.value)}
+                            sx={{ minWidth: 200 }}
+                        >
+                            <MenuItem value="all">Todos</MenuItem>
+                            {COLLABORATION_TYPES.map(type => (
+                                <MenuItem key={type.value} value={type.value}>
+                                    {type.label}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+                        <TextField
+                            select
+                            label="Filtrar por Estado"
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            sx={{ minWidth: 200 }}
+                        >
+                            <MenuItem value="all">Todos</MenuItem>
+                            {STATUSES.map(status => (
+                                <MenuItem key={status.value} value={status.value}>
+                                    {status.label}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+                    </Box>
+                </Paper>
+            )}
 
             <TableContainer component={Paper} sx={{ maxHeight: 'calc(100vh - 300px)' }}>
                 <Table stickyHeader size="small">

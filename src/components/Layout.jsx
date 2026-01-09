@@ -133,7 +133,7 @@ const Layout = ({ presentationMode, onTogglePresentation }) => {
                         Salir modo presentación
                     </Button>
                 </Box>
-                <Outlet />
+                <Outlet context={{ presentationMode }} />
             </Box>
         );
     }
@@ -258,7 +258,7 @@ const Layout = ({ presentationMode, onTogglePresentation }) => {
                     mt: 8,
                 }}
             >
-                <Outlet />
+                <Outlet context={{ presentationMode }} />
             </Box>
         </Box >
     );
