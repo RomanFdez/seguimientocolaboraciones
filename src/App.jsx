@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -19,7 +18,9 @@ import Layout from './components/Layout';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
-  const { currentUser } = useAuth();
+  const { currentUser, loading } = useAuth();
+
+  if (loading) return null;
 
   if (!currentUser) {
     return <Navigate to="/login" replace />;
@@ -28,63 +29,53 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// Main App Component
-const AppContent = () => {
-  const [presentationMode, setPresentationMode] = useState(false);
-  const { currentUser } = useAuth();
+// Root layout that includes providers
+const RootProviders = () => (
+  <ThemeProvider theme={theme}>
+    <CssBaseline />
+    <AuthProvider>
+      <DataProvider>
+        <Outlet />
+      </DataProvider>
+    </AuthProvider>
+  </ThemeProvider>
+);
 
-  const togglePresentationMode = () => {
-    setPresentationMode(!presentationMode);
-  };
-
-  if (!currentUser) {
-    return (
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    );
-  }
-
-  return (
-    <Routes>
-      <Route path="/login" element={<Navigate to="/" replace />} />
-      <Route
-        path="/"
-        element={
+const router = createBrowserRouter([
+  {
+    element: <RootProviders />,
+    children: [
+      {
+        path: "/login",
+        element: <Login />,
+      },
+      {
+        path: "/",
+        element: (
           <ProtectedRoute>
-            <Layout
-              presentationMode={presentationMode}
-              onTogglePresentation={togglePresentationMode}
-            />
+            <Layout />
           </ProtectedRoute>
-        }
-      >
-        <Route index element={<Home />} />
-        <Route path="gantt" element={<GanttView />} />
-        <Route path="colaboraciones" element={<CollaborationList />} />
-        <Route path="colaboraciones/nuevo" element={<CollaborationEdit />} />
-        <Route path="colaboraciones/:id" element={<CollaborationView />} />
-        <Route path="colaboraciones/:id/editar" element={<CollaborationEdit />} />
-        <Route path="usuarios" element={<UserManagement />} />
-      </Route>
-    </Routes>
-  );
-};
+        ),
+        children: [
+          { index: true, element: <Home /> },
+          { path: "gantt", element: <GanttView /> },
+          { path: "colaboraciones", element: <CollaborationList /> },
+          { path: "colaboraciones/nuevo", element: <CollaborationEdit /> },
+          { path: "colaboraciones/:id", element: <CollaborationView /> },
+          { path: "colaboraciones/:id/editar", element: <CollaborationEdit /> },
+          { path: "usuarios", element: <UserManagement /> },
+        ],
+      },
+      {
+        path: "*",
+        element: <Navigate to="/" replace />,
+      },
+    ],
+  },
+]);
 
 function App() {
-  return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <BrowserRouter>
-        <AuthProvider>
-          <DataProvider>
-            <AppContent />
-          </DataProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </ThemeProvider>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;

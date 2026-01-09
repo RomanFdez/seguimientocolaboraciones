@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useBlocker } from 'react-router-dom';
+import ConfirmDialog from '../components/ConfirmDialog';
 import {
     Box, Typography, Paper, Grid, Button, Container, Chip, List, ListItem, ListItemText, Divider,
     Dialog, DialogTitle, DialogContent, DialogActions, TextField, Checkbox, FormControlLabel, IconButton, Menu, MenuItem, Select, FormControl, InputLabel,
@@ -35,10 +35,33 @@ const CollaborationEdit = () => {
     // Validation state
     const [errors, setErrors] = useState({});
 
+    // Dirty checking state
+    const [initialStateJson, setInitialStateJson] = useState(null);
+    const [isDirty, setIsDirty] = useState(false);
+
+    // Blocker logic
+    const blocker = useBlocker(
+        ({ currentLocation, nextLocation }) =>
+            isDirty && currentLocation.pathname !== nextLocation.pathname
+    );
+
+    // Browser close warning
+    useEffect(() => {
+        const handleBeforeUnload = (e) => {
+            if (isDirty) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [isDirty]);
+
     useEffect(() => {
         const load = async () => {
+            let data;
             if (isNew) {
-                setCollaboration({
+                data = {
                     title: "",
                     status: "Nuevo",
                     type: "Estratégico",
@@ -64,17 +87,30 @@ const CollaborationEdit = () => {
                     },
                     deliveries: [],
                     years: [new Date().getFullYear()]
-                });
+                };
             } else {
                 const result = await getCollaborationById(id);
                 if (result.success) {
-                    setCollaboration(result.data);
+                    data = result.data;
                 }
+            }
+
+            if (data) {
+                setCollaboration(data);
+                setInitialStateJson(JSON.stringify(data));
             }
             setLoading(false);
         };
         load();
     }, [id, isNew, getCollaborationById]);
+
+    // Update isDirty whenever collaboration changes
+    useEffect(() => {
+        if (initialStateJson && collaboration) {
+            const currentJson = JSON.stringify(collaboration);
+            setIsDirty(currentJson !== initialStateJson);
+        }
+    }, [collaboration, initialStateJson]);
 
     // Handle final save to DB
     const handleFinalSave = async () => {
@@ -110,6 +146,13 @@ const CollaborationEdit = () => {
 
         if (result.success) {
             setSnackbar({ open: true, message: `¡Colaboración ${isNew ? 'creada' : 'guardada'} correctamente!`, severity: 'success' });
+
+            // Update initial state to the new saved data
+            const savedData = { ...collaboration };
+            if (isNew) savedData.id = result.id;
+            setInitialStateJson(JSON.stringify(savedData));
+            setIsDirty(false);
+
             if (isNew) {
                 setTimeout(() => navigate(`/colaboraciones/${result.id}/editar`), 1000);
             }
@@ -895,6 +938,16 @@ const CollaborationEdit = () => {
                     {snackbar.message}
                 </Alert>
             </Snackbar>
+
+            {blocker.state === 'blocked' && (
+                <ConfirmDialog
+                    open={true}
+                    title="¿Salir sin guardar?"
+                    message="Tienes cambios sin guardar en esta colaboración. ¿Estás seguro de que quieres salir? Los cambios se perderán."
+                    onConfirm={() => blocker.proceed()}
+                    onCancel={() => blocker.reset()}
+                />
+            )}
 
         </Container>
     );

@@ -31,8 +31,10 @@ import { useAuth } from '../context/AuthContext';
 
 const drawerWidth = 180;
 
-const Layout = ({ presentationMode, onTogglePresentation }) => {
+const Layout = () => {
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [presentationMode, setPresentationMode] = useState(false);
+    const onTogglePresentation = () => setPresentationMode(!presentationMode);
     const [anchorEl, setAnchorEl] = useState(null);
     const { currentUser, logout, isAdmin } = useAuth();
     const navigate = useNavigate();
