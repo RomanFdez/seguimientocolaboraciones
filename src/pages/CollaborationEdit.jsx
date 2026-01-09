@@ -38,7 +38,10 @@ const CollaborationEdit = () => {
 
     // Dirty checking state
     const [initialStateJson, setInitialStateJson] = useState(null);
-    const [isDirty, setIsDirty] = useState(false);
+    const isDirty = useMemo(() => {
+        if (!initialStateJson || !collaboration) return false;
+        return JSON.stringify(collaboration) !== initialStateJson;
+    }, [collaboration, initialStateJson]);
 
     // Blocker logic
     const blocker = useBlocker(
@@ -105,13 +108,7 @@ const CollaborationEdit = () => {
         load();
     }, [id, isNew, getCollaborationById]);
 
-    // Update isDirty whenever collaboration changes
-    useEffect(() => {
-        if (initialStateJson && collaboration) {
-            const currentJson = JSON.stringify(collaboration);
-            setIsDirty(currentJson !== initialStateJson);
-        }
-    }, [collaboration, initialStateJson]);
+
 
     // Handle final save to DB
     const handleFinalSave = async () => {
@@ -148,11 +145,12 @@ const CollaborationEdit = () => {
         if (result.success) {
             setSnackbar({ open: true, message: `¡Colaboración ${isNew ? 'creada' : 'guardada'} correctamente!`, severity: 'success' });
 
-            // Update initial state to the new saved data
+            // Sincronizamos el estado de comparación con lo que acabamos de guardar
             const savedData = { ...collaboration };
             if (isNew) savedData.id = result.id;
+
+            setCollaboration(savedData);
             setInitialStateJson(JSON.stringify(savedData));
-            setIsDirty(false);
 
             if (isNew) {
                 setTimeout(() => navigate(`/colaboraciones/${result.id}/editar`), 1000);
